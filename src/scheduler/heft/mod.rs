@@ -4,6 +4,7 @@ use petgraph::algo::toposort;
 use petgraph::prelude::*;
 use petgraph::visit::IntoNodeIdentifiers;
 
+use crate::algorithms::floyd_warshall::floyd_warshall;
 use crate::model::{Dependency, Device, Task, Transmission};
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -26,22 +27,6 @@ fn computing_time(d: &Device, t: &Task) -> f64 {
         * t.data_size as f64
         * (1. - t.parallel_fraction + t.parallel_fraction / d.number_of_cores as f64)
         / (d.cpu_frequency * 100_000_000.)
-}
-
-// fn transmission_time(d: &Transmission, t: Dependency) -> f64 {
-//     t.data_size as f64 / (d.transmission_rate * 1_000_000_000.0)
-// }
-
-fn shortest_path_n_to_n(topology: &UnGraph<Device, Transmission>) -> Vec<Vec<f64>> {
-    topology
-        .node_indices()
-        .map(|u| {
-            let res_map = petgraph::algo::dijkstra(topology, u, None, |e| {
-                1. / (e.weight().transmission_rate * 1_000_000_000.)
-            });
-            topology.node_indices().map(|v| res_map[&v]).collect_vec()
-        })
-        .collect_vec()
 }
 
 pub fn heft(
@@ -85,7 +70,7 @@ fn heft_prioritize(
     tasks: &DiGraph<Task, Dependency>,
 ) -> Vec<f64> {
     let topo = toposort(&tasks, None).unwrap();
-    let dist = shortest_path_n_to_n(topology);
+    let dist = floyd_warshall(topology);
     let mean_dist = dist
         .into_iter()
         .map(|v| v.into_iter().sum::<f64>())
@@ -120,7 +105,7 @@ fn heft_assign(
         .rev()
         .collect_vec();
 
-    let dist = shortest_path_n_to_n(topology);
+    let dist = floyd_warshall(topology);
 
     for u in tasks_by_rank {
         let task = tasks[u];

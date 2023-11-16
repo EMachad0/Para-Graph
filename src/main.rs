@@ -1,10 +1,12 @@
 mod algorithms;
 mod graph;
 mod model;
+mod bridge;
+mod scheduler;
 
 use petgraph::prelude::*;
 
-use crate::algorithms::heft::heft;
+use crate::scheduler::heft::heft;
 use crate::graph::dot;
 use crate::model::{Dependency, Device, Task, Transmission};
 
