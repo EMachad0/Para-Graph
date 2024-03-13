@@ -4,6 +4,6 @@ pub mod ffi {
         include!("framework-rs/include/floyd_warshall.h");
 
         #[allow(dead_code)]
-        fn floyd_warshall(mat: Vec<f64>) -> Vec<f64>;
+        fn floyd_warshall(n: usize, mat: &mut [f64]);
     }
 }

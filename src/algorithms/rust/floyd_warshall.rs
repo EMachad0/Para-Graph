@@ -1,61 +1,81 @@
-use std::sync::atomic::{AtomicPtr, Ordering};
+#![allow(dead_code)]
+
 use itertools::Itertools;
 use petgraph::prelude::*;
 use rayon::prelude::*;
 
-// use crate::bridge::ffi;
+use crate::bridge::ffi;
+use crate::graph::adj_matrix;
 use crate::model::{Device, Transmission};
 
-// pub fn floyd_warshall(topology: &UnGraph<Device, Transmission>) -> Vec<Vec<f64>> {
-//     let n = topology.node_count();
-//     let mut mat: Vec<f64> = vec![f64::INFINITY; n * n];
-//     for i in 0..n {
-//         mat[i * n + i] = 0.;
-//     }
-//     for e in topology.edge_references() {
-//         let u = e.source().index();
-//         let v = e.target().index();
-//         let w = 1. / (e.weight().transmission_rate * 1_000_000_000.);
-//         mat[u * n + v] = w;
-//         mat[v * n + u] = w;
-//     }
-//     let res = ffi::floyd_warshall(mat);
-//     let mat = res.chunks_exact(n).map(|v| v.to_vec()).collect_vec();
-//     mat
-// }
+pub fn floyd_warshall(graph: &UnGraph<Device, Transmission>) -> Vec<Vec<f64>> {
+    let n = graph.node_count();
+    let graph = graph.map(|_, n| n, |_, e| 1. / (e.transmission_rate * 1_000_000_000.));
+    let mat = adj_matrix::get_adj_matrix(&graph);
+    floyd_warshall_gpu_par(n, &mat)
+}
 
-pub fn floyd_warshall(topology: &UnGraph<Device, Transmission>) -> Vec<Vec<f64>> {
-    let n = topology.node_count();
-    let mut mat: Vec<f64> = vec![f64::INFINITY; n * n];
-    for i in 0..n {
-        mat[i * n + i] = 0.;
-    }
-    for e in topology.edge_references() {
-        let u = e.source().index();
-        let v = e.target().index();
-        let w = 1. / (e.weight().transmission_rate * 1_000_000_000.);
-        mat[u * n + v] = w;
-        mat[v * n + u] = w;
-    }
-    let res_ptr = AtomicPtr::new(mat.as_mut_ptr());
+fn floyd_warshall_serial(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let mut mat = mat.to_vec().clone();
     for k in 0..n {
-        let pairs: Vec<(usize, usize)> = (0..n)
-            .flat_map(|i| (0..n).map(move |j| (i, j)))
-            .collect();
+        for i in 0..n {
+            for j in 0..n {
+                mat[i][j] = mat[i][j].min(mat[i][k] + mat[k][j]);
+            }
+        }
+    }
+    mat
+}
 
-        pairs.into_par_iter().for_each(|(i, j)| {
-            if j == k {
-                return;
-            }
-            let ij = i * n + j;
-            let ik = i * n + k;
-            let kj = k * n + j;
-            unsafe {
-                let res = res_ptr.load(Ordering::Relaxed);
-                *res.add(ij) = (*res.add(ij)).min(*res.add(ik) + *res.add(kj))
-            }
+fn floyd_warshall_cpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let mut dist = mat.iter().flatten().cloned().collect_vec();
+    for k in 0..n {
+        dist.par_iter_mut().enumerate().for_each(|(idx, d)| {
+            let i = idx / n;
+            let j = idx % n;
+            let new_dist = mat[i][k] + mat[k][j];
+            *d = (*d).min(new_dist);
         });
     }
-    let mat = mat.chunks_exact(n).map(|v| v.to_vec()).collect_vec();
-    mat
+    dist.chunks_exact(n).map(|v| v.to_vec()).collect_vec()
+}
+
+fn floyd_warshall_gpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let mut mat = mat.iter().flatten().cloned().collect_vec();
+    ffi::floyd_warshall(n, &mut mat);
+    // ffi::floyd_warshall(n);
+    mat.chunks_exact(n).map(|v| v.to_vec()).collect_vec()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_matrix() -> Vec<Vec<f64>> {
+        let mat = [[0., 1., 43.], [1., 0., 6.], [2., 1., 0.]];
+        mat.iter().map(|v| v.to_vec()).collect_vec()
+    }
+
+    fn expected_matrix() -> Vec<Vec<f64>> {
+        let mat = [[0., 1., 7.], [1., 0., 6.], [2., 1., 0.]];
+        mat.iter().map(|v| v.to_vec()).collect_vec()
+    }
+
+    #[test]
+    fn test_floyd_warshall_serial() {
+        let res = floyd_warshall_serial(3, &test_matrix());
+        assert_eq!(res, expected_matrix());
+    }
+
+    #[test]
+    fn test_floyd_warshall_cpu_par() {
+        let res = floyd_warshall_cpu_par(3, &test_matrix());
+        assert_eq!(res, expected_matrix());
+    }
+
+    #[test]
+    fn test_floyd_warshall_gpu_par() {
+        let res = floyd_warshall_gpu_par(3, &test_matrix());
+        assert_eq!(res, expected_matrix());
+    }
 }

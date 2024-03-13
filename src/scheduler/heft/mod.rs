@@ -75,7 +75,7 @@ fn heft_prioritize(
         .into_iter()
         .map(|v| v.into_iter().sum::<f64>())
         .sum::<f64>();
-    let mut new_ranking = ranking.clone().to_vec();
+    let mut new_ranking = ranking.to_vec();
     topo.into_iter().rev().for_each(|u| {
         let w = tasks
             .edges(u)

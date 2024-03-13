@@ -2,4 +2,5 @@
 #include "framework-rs/src/bridge.rs.h"
 #include "rust/cxx.h"
 
-rust::vec<double> floyd_warshall(rust::vec<double> mat);
+void floyd_warshall(const size_t n, rust::slice<double> mat);
+//void floyd_warshall(const size_t n);
