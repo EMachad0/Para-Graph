@@ -1,12 +1,5 @@
 fn main() {
-    std::env::set_var(
-        "CC",
-        "/opt/nvidia/hpc_sdk/Linux_x86_64/24.3/compilers/bin/nvc",
-    );
-    std::env::set_var(
-        "CXX",
-        "/opt/nvidia/hpc_sdk/Linux_x86_64/24.3/compilers/bin/nvc++",
-    );
+    std::env::set_var("CXX", "nvc++");
 
     // disable default flags
     std::env::set_var("CRATE_CC_NO_DEFAULTS", "1");
