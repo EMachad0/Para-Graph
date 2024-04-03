@@ -1,14 +1,13 @@
-mod algorithms;
-mod bridge;
-mod graph;
-mod model;
+mod heft;
 mod scheduler;
 
+use heft::heft;
 use petgraph::prelude::*;
 
-use crate::graph::dot;
-use crate::model::{Dependency, Device, Task, Transmission};
-use crate::scheduler::heft::heft;
+use framework_rs::{
+    graph::dot,
+    model::{Dependency, Device, Task, Transmission},
+};
 
 fn make_topology_graph() -> UnGraph<Device, Transmission> {
     let mut topology: UnGraph<Device, Transmission> = UnGraph::new_undirected();

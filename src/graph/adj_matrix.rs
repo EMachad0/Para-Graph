@@ -1,6 +1,6 @@
+use itertools::Itertools;
 use petgraph::graph::UnGraph;
 use petgraph::prelude::EdgeRef;
-use itertools::Itertools;
 
 pub fn get_adj_matrix<N>(graph: &UnGraph<N, f64>) -> Vec<Vec<f64>> {
     let n = graph.node_count();

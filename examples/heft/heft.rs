@@ -1,33 +1,13 @@
+use crate::scheduler::{computing_time, Matching};
+use framework_rs::{
+    algorithms::floyd_warshall::floyd_warshall,
+    model::{Dependency, Device, Task, Transmission},
+};
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 use petgraph::algo::toposort;
 use petgraph::prelude::*;
 use petgraph::visit::IntoNodeIdentifiers;
-
-use crate::algorithms::floyd_warshall::floyd_warshall;
-use crate::model::{Dependency, Device, Task, Transmission};
-
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Matching {
-    pub finish_time: f64,
-    pub node: usize,
-}
-
-impl std::fmt::Display for Matching {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "Node {:2} Finish Time {:8.5}",
-            self.node, self.finish_time
-        ))
-    }
-}
-
-fn computing_time(d: &Device, t: &Task) -> f64 {
-    t.processing_density
-        * t.data_size as f64
-        * (1. - t.parallel_fraction + t.parallel_fraction / d.number_of_cores as f64)
-        / (d.cpu_frequency * 100_000_000.)
-}
 
 pub fn heft(
     topology: &UnGraph<Device, Transmission>,
@@ -56,13 +36,6 @@ fn mean_ranking(
         })
         .collect_vec()
 }
-
-/// Apply Function on DiGraph
-/// Deeper nodes first
-// fn topology_compute_reverse<N, E, R>(graph: &DiGraph<N, E>, f: fn(&DiGraph<N, E>, NodeIndex) -> R) -> Vec<R> {
-//     let topo = toposort(graph, None).unwrap();
-//     topo.into_iter().rev().map(|u| f(graph, u)).collect_vec()
-// }
 
 fn heft_prioritize(
     ranking: &[f64],
