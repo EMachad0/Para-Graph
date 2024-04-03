@@ -29,7 +29,11 @@ fn main() {
         if std::env::var("PROFILE").unwrap_or_default() == "debug" {
             build.flag("-Minfo=accel");
         }
+    }
 
+    build.compile("framework-rs");
+
+    if nvcxx_available {
         // openacc libs
         // loads bottom up for some reason
         println!("cargo:rustc-link-lib=dylib=acchost");
@@ -57,8 +61,6 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=acccuda");
         println!("cargo:rustc-link-lib=dylib=accdevaux");
     }
-
-    build.compile("framework-rs");
 
     // hot reload
     println!("cargo:rerun-if-changed=src/main.rs");
