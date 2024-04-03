@@ -13,23 +13,19 @@ fn full_matrix(n: usize) -> Vec<Vec<f64>> {
     mat
 }
 
-fn fw_serial(c: &mut Criterion) {
-    c.bench_function("floyd warshall serial", |b| {
+fn bench_floyd_warshall(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Floyd Warshall");
+    group.bench_function("floyd warshall serial", |b| {
         b.iter(|| floyd_warshall_serial(N, &full_matrix(N)))
     });
-}
-
-fn fw_cpu_par(c: &mut Criterion) {
-    c.bench_function("floyd warshall cpu par", |b| {
+    group.bench_function("floyd warshall cpu par", |b| {
         b.iter(|| floyd_warshall_cpu_par(N, &full_matrix(N)))
     });
-}
-
-fn fw_gpu_par(c: &mut Criterion) {
-    c.bench_function("floyd warshall gpu par", |b| {
+    group.bench_function("floyd warshall gpu par", |b| {
         b.iter(|| floyd_warshall_gpu_par(N, &full_matrix(N)))
     });
+    group.finish();
 }
 
-criterion_group!(benches, fw_serial, fw_cpu_par, fw_gpu_par);
+criterion_group!(benches, bench_floyd_warshall);
 criterion_main!(benches);
