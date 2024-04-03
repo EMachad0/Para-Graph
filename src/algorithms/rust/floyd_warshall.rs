@@ -43,7 +43,6 @@ fn floyd_warshall_cpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
 fn floyd_warshall_gpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
     let mut mat = mat.iter().flatten().cloned().collect_vec();
     ffi::floyd_warshall(n, &mut mat);
-    // ffi::floyd_warshall(n);
     mat.chunks_exact(n).map(|v| v.to_vec()).collect_vec()
 }
 

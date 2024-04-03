@@ -1,14 +1,14 @@
 mod algorithms;
+mod bridge;
 mod graph;
 mod model;
-mod bridge;
 mod scheduler;
 
 use petgraph::prelude::*;
 
-use crate::scheduler::heft::heft;
 use crate::graph::dot;
 use crate::model::{Dependency, Device, Task, Transmission};
+use crate::scheduler::heft::heft;
 
 fn make_topology_graph() -> UnGraph<Device, Transmission> {
     let mut topology: UnGraph<Device, Transmission> = UnGraph::new_undirected();
@@ -89,6 +89,8 @@ fn make_tasks_graph() -> DiGraph<Task, Dependency> {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
     let topology: UnGraph<Device, Transmission> = make_topology_graph();
     let tasks: DiGraph<Task, Dependency> = make_tasks_graph();
 
@@ -97,6 +99,8 @@ fn main() {
         println!("{:2}: {}", i, m);
     });
 
-    dot::to_dot("topology", &topology);
-    dot::to_dot("tasks", &tasks);
+    if args.contains(&"--dot".to_string()) {
+        dot::to_dot("topology", &topology);
+        dot::to_dot("tasks", &tasks);
+    }
 }

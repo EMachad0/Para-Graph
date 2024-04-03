@@ -21,5 +21,5 @@ where
     Command::new("dot")
         .args(["-Tpng", &path, "-O"])
         .output()
-        .unwrap();
+        .expect("Unable to execute dot command");
 }
