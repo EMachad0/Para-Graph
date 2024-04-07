@@ -2,10 +2,10 @@
 name = "para-graph"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <you@example.com>"]
-description = "A brief description of what your crate does."
-repository = "https://github.com/yourusername/para-graph"
-license = "MIT"  # Or your choice of license
+authors = ["Eliton Machado <elitonmachadod200@gmail.com>"]
+description = "\"Para-Graph\" delivers swift, parallel graph algorithms in Rust, optimized for CPU and GPU. Ideal for HPC workflows."
+repository = "https://github.com/EMachad0/Para-Graph"
+license = "MIT"
 
 [[bench]]
 name = "floyd_warshall"
