@@ -1,4 +1,4 @@
-#include "framework-rs/include/floyd_warshall.h"
+#include "para-graph/include/floyd_warshall.h"
 
 void floyd_warshall(const size_t n, rust::slice<double> mat) {
     double res[n * n];

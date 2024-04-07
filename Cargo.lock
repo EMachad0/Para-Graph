@@ -256,22 +256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 
 [[package]]
-name = "framework-rs"
-version = "0.1.0"
-dependencies = [
- "cc",
- "criterion",
- "cxx",
- "cxx-build",
- "itertools 0.12.1",
- "log",
- "ordered-float",
- "petgraph",
- "rand",
- "rayon",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -422,6 +406,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a76df7075c7d4d01fdcb46c912dd17fba5b60c78ea480b475f2b6ab6f666584e"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "para-graph"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "criterion",
+ "cxx",
+ "cxx-build",
+ "itertools 0.12.1",
+ "log",
+ "ordered-float",
+ "petgraph",
+ "rand",
+ "rayon",
 ]
 
 [[package]]

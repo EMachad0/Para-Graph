@@ -1,5 +1,5 @@
 use crate::scheduler::{computing_time, Matching};
-use framework_rs::{
+use para_graph::{
     algorithms::floyd_warshall::floyd_warshall,
     model::{Dependency, Device, Task, Transmission},
 };

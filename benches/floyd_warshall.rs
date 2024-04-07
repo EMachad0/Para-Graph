@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use framework_rs::algorithms::floyd_warshall::{
+use para_graph::algorithms::floyd_warshall::{
     floyd_warshall_cpu_par, floyd_warshall_gpu_par, floyd_warshall_serial,
 };
 

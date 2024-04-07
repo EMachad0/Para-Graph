@@ -1,4 +1,4 @@
-use framework_rs::model::{Device, Task};
+use para_graph::model::{Device, Task};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Matching {

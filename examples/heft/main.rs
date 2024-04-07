@@ -4,7 +4,7 @@ mod scheduler;
 use heft::heft;
 use petgraph::prelude::*;
 
-use framework_rs::{
+use para_graph::{
     graph::dot,
     model::{Dependency, Device, Task, Transmission},
 };

@@ -31,7 +31,7 @@ fn main() {
         }
     }
 
-    build.compile("framework-rs");
+    build.compile("para-graph");
 
     if nvcxx_available {
         // openacc libs
