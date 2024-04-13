@@ -7,8 +7,8 @@ const N: usize = 1000;
 
 fn full_matrix(n: usize) -> Vec<Vec<f64>> {
     let mut mat = vec![vec![f64::INFINITY; n]; n];
-    for i in 0..n {
-        mat[i][i] = 0.;
+    for (i, row) in mat.iter_mut().enumerate() {
+        row[i] = 0.;
     }
     mat
 }
