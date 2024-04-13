@@ -29,6 +29,9 @@ fn main() {
         if std::env::var("PROFILE").unwrap_or_default() == "debug" {
             build.flag("-Minfo=accel");
         }
+    } else {
+        // allow unknown pragmas
+        build.flag("-Wno-unknown-pragmas");
     }
 
     build.compile("para-graph");
