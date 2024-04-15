@@ -11,6 +11,10 @@ license = "MIT"
 name = "floyd_warshall"
 harness = false
 
+[[bench]]
+name = "radix_sort"
+harness = false
+
 [dependencies]
 petgraph = { version = "0.6.4", features = ["serde"] }
 rand = { version = "0.8.5" }
