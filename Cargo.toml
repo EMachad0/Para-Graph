@@ -15,6 +15,10 @@ harness = false
 name = "radix_sort"
 harness = false
 
+[[bench]]
+name = "binary_search"
+harness = false
+
 [dependencies]
 petgraph = { version = "0.6.4", features = ["serde"] }
 rand = { version = "0.8.5" }
@@ -24,6 +28,7 @@ ordered-float = "4.2.0"
 cc = "1.0.83"
 cxx = "1.0"
 log = "0.4.20"
+num = { version = "0.4.2", features = ["num-bigint"] }
 
 [dev-dependencies]
 criterion = "0.5.1"

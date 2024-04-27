@@ -15,6 +15,8 @@ fn full_matrix(n: usize) -> Vec<Vec<f64>> {
 
 fn bench_floyd_warshall(c: &mut Criterion) {
     let mut group = c.benchmark_group("Floyd Warshall");
+    group.sample_size(10);
+    group.measurement_time(std::time::Duration::from_secs(60));
     group.bench_function("floyd warshall serial", |b| {
         b.iter(|| floyd_warshall_serial(N, &full_matrix(N)))
     });
