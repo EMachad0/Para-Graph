@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use itertools::Itertools;
 use para_graph::algorithms::gaussian_elimination::{
-    gaussian_elimination_par, gaussian_elimination_serial,
+    gaussian_elimination_par_cpu, gaussian_elimination_par_gpu, gaussian_elimination_serial,
 };
 
 const N: usize = 1_000;
@@ -34,8 +34,11 @@ fn bench_gaussian_elimination(c: &mut Criterion) {
     group.bench_function("gaussian elimination serial", |b| {
         b.iter(|| gaussian_elimination_serial(&get_a(), &get_b()))
     });
-    group.bench_function("gaussian elimination par", |b| {
-        b.iter(|| gaussian_elimination_par(&get_a(), &get_b()))
+    group.bench_function("gaussian elimination par cpu", |b| {
+        b.iter(|| gaussian_elimination_par_cpu(&get_a(), &get_b()))
+    });
+    group.bench_function("gaussian elimination par gpu", |b| {
+        b.iter(|| gaussian_elimination_par_gpu(&get_a(), &get_b()))
     });
     group.finish();
 }

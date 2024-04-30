@@ -6,6 +6,9 @@ pub mod ffi {
 
         unsafe fn floyd_warshall(n: usize, mat: &mut [f64]);
 
-        unsafe fn gaussian_elimination(n: usize, mat: &[Vec<f64>]) -> UniquePtr<CxxVector<f64>>;
+        unsafe fn gaussian_elimination(
+            n: usize,
+            mat: &[Vec<f64>],
+        ) -> Result<UniquePtr<CxxVector<f64>>>;
     }
 }

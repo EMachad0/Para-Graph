@@ -6,8 +6,12 @@
 /// * `b` - vector `b` in a*x = b
 /// # Returns
 /// * `Option<Vec<f64>>` - vector of results
+use crate::bridge::ffi;
+use itertools::Itertools;
 use ordered_float::OrderedFloat;
 use rayon::prelude::*;
+
+const EPSILON: f64 = 1e-10;
 
 pub fn gaussian_elimination_serial(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>> {
     if a.is_empty() || a.len() != a[0].len() || a.len() != b.len() {
@@ -19,7 +23,7 @@ pub fn gaussian_elimination_serial(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>
         let row = (col..n)
             .max_by_key(|&i| OrderedFloat(mat[i][col].abs()))
             .unwrap();
-        if mat[row][col].abs() < f64::EPSILON {
+        if mat[row][col].abs() < EPSILON {
             return None;
         }
         if row != col {
@@ -44,7 +48,7 @@ pub fn gaussian_elimination_serial(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>
     Some(res)
 }
 
-pub fn gaussian_elimination_par(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>> {
+pub fn gaussian_elimination_par_cpu(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>> {
     if a.is_empty() || a.len() != a[0].len() || a.len() != b.len() {
         return None;
     }
@@ -78,6 +82,19 @@ pub fn gaussian_elimination_par(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>> {
         .map(|(i, row)| row[n] / row[i])
         .collect();
     Some(res)
+}
+
+pub fn gaussian_elimination_par_gpu(a: &[Vec<f64>], b: &[f64]) -> Option<Vec<f64>> {
+    if a.is_empty() || a.len() != a[0].len() || a.len() != b.len() {
+        return None;
+    }
+    let n = a.len();
+    let mat = prepare(a, b);
+    unsafe {
+        let cpp_vec = ffi::gaussian_elimination(n, &mat).ok()?;
+        let vec = cpp_vec.into_iter().cloned().collect_vec();
+        Some(vec)
+    }
 }
 
 /// prepares the matrix for Gaussian elimination by converting it to an augmented matrix
@@ -130,7 +147,7 @@ mod tests {
         let result = gaussian_elimination_serial(&a, &B).unwrap();
         assert_eq!(result.len(), EXPECTED.len());
         for (r, e) in result.iter().zip(EXPECTED.iter()) {
-            assert!((r - e).abs() < f64::EPSILON, "{} != {}", r, e);
+            assert!((r - e).abs() < EPSILON, "{} != {}", r, e);
         }
     }
 
@@ -142,19 +159,36 @@ mod tests {
     }
 
     #[test]
-    fn test_gauss_par() {
+    fn test_gauss_cpu() {
         let a = A.iter().map(|r| r.to_vec()).collect_vec();
-        let result = gaussian_elimination_par(&a, &B).unwrap();
+        let result = gaussian_elimination_par_cpu(&a, &B).unwrap();
         assert_eq!(result.len(), EXPECTED.len());
         for (r, e) in result.iter().zip(EXPECTED.iter()) {
-            assert!((r - e).abs() < f64::EPSILON, "{} != {}", r, e);
+            assert!((r - e).abs() < EPSILON, "{} != {}", r, e);
         }
     }
 
     #[test]
-    fn test_gauss_par_singular() {
+    fn test_gauss_cpu_singular() {
         let a: Vec<Vec<f64>> = vec![vec![1.0, 2.0], vec![2.0, 4.0]];
         let b = vec![1.0, 2.0];
-        assert_eq!(gaussian_elimination_par(&a, &b), None);
+        assert_eq!(gaussian_elimination_par_cpu(&a, &b), None);
+    }
+
+    #[test]
+    fn test_gauss_gpu() {
+        let a = A.iter().map(|r| r.to_vec()).collect_vec();
+        let result = gaussian_elimination_par_gpu(&a, &B).unwrap();
+        assert_eq!(result.len(), EXPECTED.len());
+        for (r, e) in result.iter().zip(EXPECTED.iter()) {
+            assert!((r - e).abs() < EPSILON, "{} != {}", r, e);
+        }
+    }
+
+    #[test]
+    fn test_gauss_gpu_singular() {
+        let a: Vec<Vec<f64>> = vec![vec![1.0, 2.0], vec![2.0, 4.0]];
+        let b = vec![1.0, 2.0];
+        assert_eq!(gaussian_elimination_par_gpu(&a, &b), None);
     }
 }
