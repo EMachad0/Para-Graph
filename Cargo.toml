@@ -23,6 +23,10 @@ harness = false
 name = "gaussian_elimination"
 harness = false
 
+[[bench]]
+name = "prefix_sum"
+harness = false
+
 [dependencies]
 petgraph = { version = "0.6.4", features = ["serde"] }
 rand = { version = "0.8.5" }

@@ -20,6 +20,7 @@ fn main() {
         .cpp(true) // use CXX compiler
         .file("src/algorithms/cpp/floyd_warshall.cc")
         .file("src/algorithms/cpp/gaussian_elimination.cc")
+        .file("src/algorithms/cpp/prefix_sum.cc")
         .flag_if_supported("-std=c++17") // latest suported by openacc
         .flag("-fPIC"); // make as library, position independent code
 
@@ -72,4 +73,6 @@ fn main() {
     println!("cargo:rerun-if-changed=include/floyd_warshall.h");
     println!("cargo:rerun-if-changed=src/algorithms/cpp/gaussian_elimination.cc");
     println!("cargo:rerun-if-changed=include/gaussian_elimination.h");
+    println!("cargo:rerun-if-changed=src/algorithms/cpp/prefix_sum.cc");
+    println!("cargo:rerun-if-changed=include/prefix_sum.h");
 }
