@@ -26,9 +26,6 @@ pub fn radix_sort_serial(arr: &mut [usize]) {
 }
 
 pub fn radix_sort_par(arr: &mut [usize]) {
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Arc;
-
     let max: usize = match arr.iter().max() {
         Some(&x) => x,
         None => return,
@@ -37,29 +34,29 @@ pub fn radix_sort_par(arr: &mut [usize]) {
     let mut base = 1;
     while base <= max {
         let digit_of = |x| x / base % radix;
-        let counter = Arc::new((0..radix).map(|_| AtomicUsize::new(0)).collect::<Vec<_>>());
-        arr.par_iter().for_each(|&x| {
-            counter[digit_of(x)].fetch_add(1, Ordering::Relaxed);
+        let digits = arr.iter().map(|&x| digit_of(x)).collect_vec();
+        let mut counter = vec![0; radix];
+        digits.iter().for_each(|&x| {
+            counter[x] += 1;
         });
-        counter.iter().tuple_windows().for_each(|(a, b)| {
-            b.store(
-                b.load(Ordering::Relaxed) + a.load(Ordering::Relaxed),
-                Ordering::Relaxed,
-            );
-        });
-
-        let sorted = Arc::new(
-            (0..arr.len())
-                .map(|_| AtomicUsize::new(0))
-                .collect::<Vec<_>>(),
-        );
-        arr.par_iter().rev().for_each(|&x| {
-            let idx = counter[digit_of(x)].fetch_sub(1, Ordering::Relaxed);
-            sorted[idx - 1].store(x, Ordering::Relaxed);
-        });
-
-        arr.par_iter_mut().enumerate().for_each(|(i, x)| {
-            *x = sorted[i].load(Ordering::Relaxed);
+        let mut counter = counter
+            .iter()
+            .scan(0, |s, &e| {
+                *s += e;
+                Some(*s)
+            })
+            .collect_vec();
+        let idxs = digits
+            .iter()
+            .rev()
+            .map(|&x| {
+                counter[x] -= 1;
+                counter[x]
+            })
+            .collect_vec();
+        let idxs = idxs.into_iter().rev().collect_vec();
+        arr.to_owned().iter().enumerate().for_each(|(i, &x)| {
+            arr[idxs[i]] = x;
         });
         base *= radix;
     }
@@ -69,35 +66,57 @@ pub fn radix_sort_par(arr: &mut [usize]) {
 mod tests {
     use super::*;
 
+    const LARGE_ARR: [usize; 40] = [
+        963, 482, 145, 973, 281, 856, 724, 329, 920, 198, 29, 735, 503, 920, 74, 621, 415, 877,
+        266, 253, 499, 782, 720, 481, 444, 96, 762, 901, 864, 679, 503, 3, 650, 718, 644, 380, 66,
+        368, 192, 370,
+    ];
+
     #[test]
     fn ascending_serial() {
         let mut v = vec![1, 4, 24, 37, 64, 127, 201];
+        let expected = v.iter().cloned().sorted().collect_vec();
         radix_sort_serial(&mut v);
-        let expected = v.iter().sorted().cloned().collect_vec();
         assert_eq!(v, expected);
     }
 
     #[test]
     fn descending_serial() {
         let mut v = vec![201, 127, 64, 37, 24, 4, 1];
+        let expected = v.iter().cloned().sorted().collect_vec();
         radix_sort_serial(&mut v);
-        let expected = v.iter().sorted().cloned().collect_vec();
         assert_eq!(v, expected);
     }
 
     #[test]
-    fn ascending_par() {
+    fn large_random_serial() {
+        let mut v = LARGE_ARR.to_vec();
+        let expected = v.iter().cloned().sorted().collect_vec();
+        radix_sort_serial(&mut v);
+        assert_eq!(v, expected);
+    }
+
+    #[test]
+    fn ascending_cpu() {
         let mut v = vec![1, 4, 24, 37, 64, 127, 201];
+        let expected = v.iter().cloned().sorted().collect_vec();
         radix_sort_par(&mut v);
-        let expected = v.iter().sorted().cloned().collect_vec();
         assert_eq!(v, expected);
     }
 
     #[test]
-    fn descending_par() {
+    fn descending_cpu() {
         let mut v = vec![201, 127, 64, 37, 24, 4, 1];
+        let expected = v.iter().cloned().sorted().collect_vec();
         radix_sort_par(&mut v);
-        let expected = v.iter().sorted().cloned().collect_vec();
+        assert_eq!(v, expected);
+    }
+
+    #[test]
+    fn large_random_cpu() {
+        let mut v = LARGE_ARR.to_vec();
+        let expected = v.iter().cloned().sorted().collect_vec();
+        radix_sort_par(&mut v);
         assert_eq!(v, expected);
     }
 }
