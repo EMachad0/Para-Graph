@@ -17,20 +17,25 @@ std::unique_ptr<std::vector<double>> gaussian_elimination(const size_t n, rust::
                 max_row = i;
             }
         }
-        for (size_t i = col; i <= n; i++) {
-            double temp = mat[col][i];
-            mat[col][i] = mat[max_row][i];
-            mat[max_row][i] = temp;
+        if (max_row != col) {
+            #pragma acc loop
+            for (size_t i = col; i <= n; i++) {
+                double temp = mat[col][i];
+                mat[col][i] = mat[max_row][i];
+                mat[max_row][i] = temp;
+            }
         }
         if (std::abs(mat[col][col]) < EPS) {
             throw std::runtime_error("Matrix is singular");
         }
         
+        #pragma acc loop
         for (size_t i = 0; i < n; i++) {
             if (i == col) {
                 continue;
             }
             double ratio = mat[i][col] / mat[col][col];
+            #pragma acc loop
             for (size_t j = col; j <= n; j++) {
                 mat[i][j] -= ratio * mat[col][j];
             }

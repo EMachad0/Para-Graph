@@ -1,5 +1,7 @@
+use crate::algorithms::prefix_sum::pref_sum_par_cpu;
 use itertools::Itertools;
 use rayon::prelude::*;
+use std::cell::Cell;
 
 pub fn radix_sort_serial(arr: &mut [usize]) {
     let max: usize = match arr.iter().max() {
@@ -32,29 +34,69 @@ pub fn radix_sort_par(arr: &mut [usize]) {
     };
     let radix = arr.len().next_power_of_two();
     let mut base = 1;
+
+    let chunks = rayon::current_num_threads();
+    let chunk_size = arr.len().div_ceil(chunks);
+    let mut digits = Vec::new();
+
+    let mut counters = vec![0usize; radix * chunks]
+        .chunks_exact(radix)
+        .map(|x| x.to_vec())
+        .collect_vec();
     while base <= max {
+        counters.iter_mut().for_each(|x| x.fill(0));
+
         let digit_of = |x| x / base % radix;
-        let digits = arr.iter().map(|&x| digit_of(x)).collect_vec();
-        let mut counter = vec![0; radix];
-        digits.iter().for_each(|&x| {
-            counter[x] += 1;
+        arr.par_iter()
+            .map(|&x| digit_of(x))
+            .collect_into_vec(&mut digits);
+
+        digits
+            .par_chunks(chunk_size)
+            .zip(counters.par_iter_mut())
+            .for_each(|(chunk, counter)| {
+                chunk.iter().for_each(|&x| {
+                    counter[x] += 1;
+                });
+            });
+
+        let slice = &mut counters[..];
+        let slice_of_cells: &[Cell<_>] = Cell::from_mut(slice).as_slice_of_cells();
+        slice_of_cells.windows(2).for_each(|window| {
+            let prev = window[0].take();
+            let mut curr = window[1].take();
+            curr.par_iter_mut()
+                .zip(prev.par_iter())
+                .for_each(|(c, p)| *c += *p);
+            window[1].set(curr);
+            window[0].set(prev);
         });
-        let mut counter = counter
-            .iter()
-            .scan(0, |s, &e| {
-                *s += e;
-                Some(*s)
-            })
-            .collect_vec();
+        pref_sum_par_cpu(counters.last_mut().unwrap());
+        let (front, end) = counters.split_at_mut(chunks - 1);
+        let end = &mut end[0];
+        front.par_iter_mut().for_each(|counter| {
+            counter
+                .par_iter_mut()
+                .skip(1)
+                .zip(end.par_iter())
+                .for_each(|(c, e)| *c += *e);
+        });
+
         let idxs = digits
-            .iter()
-            .rev()
-            .map(|&x| {
-                counter[x] -= 1;
-                counter[x]
+            .par_chunks(chunk_size)
+            .zip(counters.par_iter_mut())
+            .flat_map(|(chunk, counter)| {
+                let aux = chunk
+                    .iter()
+                    .rev()
+                    .map(|&x| {
+                        counter[x] -= 1;
+                        counter[x]
+                    })
+                    .collect_vec();
+                aux.into_iter().rev().collect_vec()
             })
-            .collect_vec();
-        let idxs = idxs.into_iter().rev().collect_vec();
+            .collect::<Vec<_>>();
         arr.to_owned().iter().enumerate().for_each(|(i, &x)| {
             arr[idxs[i]] = x;
         });
