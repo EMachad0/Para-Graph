@@ -3,5 +3,6 @@
 #include "rust/cxx.h"
 #include <vector>
 #include <stdexcept>
+#include <memory>
 
 std::unique_ptr<std::vector<double>> gaussian_elimination(const size_t n, rust::slice<const rust::Vec<double>> mat);

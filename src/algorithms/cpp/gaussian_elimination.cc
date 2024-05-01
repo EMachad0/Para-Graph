@@ -18,7 +18,7 @@ std::unique_ptr<std::vector<double>> gaussian_elimination(const size_t n, rust::
             }
         }
         if (max_row != col) {
-            #pragma acc loop
+            #pragma acc parallel loop
             for (size_t i = col; i <= n; i++) {
                 double temp = mat[col][i];
                 mat[col][i] = mat[max_row][i];
@@ -29,7 +29,7 @@ std::unique_ptr<std::vector<double>> gaussian_elimination(const size_t n, rust::
             throw std::runtime_error("Matrix is singular");
         }
         
-        #pragma acc loop
+        #pragma acc parallel loop
         for (size_t i = 0; i < n; i++) {
             if (i == col) {
                 continue;
