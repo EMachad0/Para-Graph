@@ -32,13 +32,12 @@ pub fn radix_sort_par(arr: &mut [usize]) {
         Some(&x) => x,
         None => return,
     };
-    let radix = arr.len().next_power_of_two();
-    let mut base = 1;
-
     let chunks = rayon::current_num_threads();
     let chunk_size = arr.len().div_ceil(chunks);
-    let mut digits = Vec::new();
+    let radix = chunks;
+    let mut base = 1;
 
+    let mut digits = Vec::new();
     let mut counters = vec![0usize; radix * chunks]
         .chunks_exact(radix)
         .map(|x| x.to_vec())

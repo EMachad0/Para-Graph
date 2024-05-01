@@ -1,10 +1,15 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use para_graph::algorithms::radix_sort::{radix_sort_par, radix_sort_serial};
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 const MAX: usize = 10_000_000;
+const ORDER: usize = MAX;
 
 fn test_vector() -> Vec<usize> {
-    (0..MAX).rev().collect()
+    let mut vec: Vec<usize> = (0..MAX).map(|x| x * ORDER).collect();
+    vec.shuffle(&mut thread_rng());
+    vec
 }
 
 fn bench_radix_sort(c: &mut Criterion) {
