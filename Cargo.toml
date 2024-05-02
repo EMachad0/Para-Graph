@@ -1,6 +1,6 @@
 [package]
 name = "para-graph"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Eliton Machado <elitonmachadod200@gmail.com>"]
 description = "\"Para-Graph\" delivers swift, parallel graph algorithms in Rust, optimized for CPU and GPU. Ideal for HPC workflows."
