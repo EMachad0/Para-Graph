@@ -3,35 +3,48 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use std::cell::Cell;
 
-pub fn radix_sort_serial(arr: &mut [usize]) {
-    let max: usize = match arr.iter().max() {
-        Some(&x) => x,
-        None => return,
-    };
+pub trait RadixSortable: Clone {
+    fn digit_of(&self, base: usize, radix: usize) -> usize;
+}
+
+impl RadixSortable for usize {
+    fn digit_of(&self, base: usize, radix: usize) -> usize {
+        self / base % radix
+    }
+}
+
+impl<T: Clone> RadixSortable for (usize, T) {
+    fn digit_of(&self, base: usize, radix: usize) -> usize {
+        self.0 / base % radix
+    }
+}
+
+pub fn radix_sort_serial<T: RadixSortable>(arr: &mut [T]) {
     let radix = arr.len().next_power_of_two();
     let mut base = 1;
-    while base <= max {
-        let digit_of = |x| x / base % radix;
+    loop {
         let mut counter = vec![0; radix];
-        for &x in arr.iter() {
-            counter[digit_of(x)] += 1;
+        for x in arr.iter() {
+            counter[x.digit_of(base, radix)] += 1;
         }
         for i in 1..radix {
             counter[i] += counter[i - 1];
         }
-        for &x in arr.to_owned().iter().rev() {
-            counter[digit_of(x)] -= 1;
-            arr[counter[digit_of(x)]] = x;
+        if counter[0] == arr.len() {
+            break;
+        }
+        for x in arr.to_owned().iter().rev() {
+            counter[x.digit_of(base, radix)] -= 1;
+            arr[counter[x.digit_of(base, radix)]] = x.clone();
         }
         base *= radix;
     }
 }
 
-pub fn radix_sort_par(arr: &mut [usize]) {
-    let max: usize = match arr.iter().max() {
-        Some(&x) => x,
-        None => return,
-    };
+pub fn radix_sort_par_cpu<T>(arr: &mut [T])
+where
+    T: RadixSortable + Send + Sync,
+{
     let chunks = rayon::current_num_threads();
     let chunk_size = arr.len().div_ceil(chunks);
     let radix = chunks;
@@ -42,12 +55,11 @@ pub fn radix_sort_par(arr: &mut [usize]) {
         .chunks_exact(radix)
         .map(|x| x.to_vec())
         .collect_vec();
-    while base <= max {
+    loop {
         counters.iter_mut().for_each(|x| x.fill(0));
 
-        let digit_of = |x| x / base % radix;
         arr.par_iter()
-            .map(|&x| digit_of(x))
+            .map(|x| x.digit_of(base, radix))
             .collect_into_vec(&mut digits);
 
         digits
@@ -80,6 +92,9 @@ pub fn radix_sort_par(arr: &mut [usize]) {
                 .zip(end.par_iter())
                 .for_each(|(c, e)| *c += *e);
         });
+        if counters.last().unwrap()[0] == arr.len() {
+            break;
+        }
 
         let idxs = digits
             .par_chunks(chunk_size)
@@ -96,8 +111,8 @@ pub fn radix_sort_par(arr: &mut [usize]) {
                 aux.into_iter().rev().collect_vec()
             })
             .collect::<Vec<_>>();
-        arr.to_owned().iter().enumerate().for_each(|(i, &x)| {
-            arr[idxs[i]] = x;
+        arr.to_owned().iter().enumerate().for_each(|(i, x)| {
+            arr[idxs[i]] = x.clone();
         });
         base *= radix;
     }
@@ -141,7 +156,7 @@ mod tests {
     fn ascending_cpu() {
         let mut v = vec![1, 4, 24, 37, 64, 127, 201];
         let expected = v.iter().cloned().sorted().collect_vec();
-        radix_sort_par(&mut v);
+        radix_sort_par_cpu(&mut v);
         assert_eq!(v, expected);
     }
 
@@ -149,7 +164,7 @@ mod tests {
     fn descending_cpu() {
         let mut v = vec![201, 127, 64, 37, 24, 4, 1];
         let expected = v.iter().cloned().sorted().collect_vec();
-        radix_sort_par(&mut v);
+        radix_sort_par_cpu(&mut v);
         assert_eq!(v, expected);
     }
 
@@ -157,7 +172,7 @@ mod tests {
     fn large_random_cpu() {
         let mut v = LARGE_ARR.to_vec();
         let expected = v.iter().cloned().sorted().collect_vec();
-        radix_sort_par(&mut v);
+        radix_sort_par_cpu(&mut v);
         assert_eq!(v, expected);
     }
 }

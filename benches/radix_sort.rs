@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use para_graph::algorithms::radix_sort::{radix_sort_par, radix_sort_serial};
+use para_graph::algorithms::radix_sort::{radix_sort_par_cpu, radix_sort_serial};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
@@ -20,7 +20,7 @@ fn bench_radix_sort(c: &mut Criterion) {
         b.iter(|| radix_sort_serial(&mut test_vector()))
     });
     group.bench_function("radix sort par", |b| {
-        b.iter(|| radix_sort_par(&mut test_vector()))
+        b.iter(|| radix_sort_par_cpu(&mut test_vector()))
     });
     group.finish();
 }

@@ -1,10 +1,10 @@
 use crate::scheduler::{computing_time, Matching};
-use para_graph::{
-    algorithms::floyd_warshall::floyd_warshall,
-    model::{Dependency, Device, Task, Transmission},
-};
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
+use para_graph::{
+    algorithms::{floyd_warshall::floyd_warshall, radix_sort::radix_sort_par_cpu},
+    model::{Dependency, Device, Task, Transmission},
+};
 use petgraph::algo::toposort;
 use petgraph::prelude::*;
 use petgraph::visit::IntoNodeIdentifiers;
@@ -72,10 +72,15 @@ fn heft_assign(
     let mut assignments: Vec<Matching> = vec![Matching::default(); tasks.node_count()];
     let mut delay: Vec<f64> = vec![0.; topology.node_count()];
 
-    let tasks_by_rank = tasks
+    let mut ranks_and_tasks = tasks
         .node_indices()
-        .sorted_by_key(|u| OrderedFloat(ranking[u.index()]))
+        .map(|u| (ranking[u.index()].round() as usize, u))
+        .collect_vec();
+    radix_sort_par_cpu(&mut ranks_and_tasks);
+    let tasks_by_rank = ranks_and_tasks
+        .into_iter()
         .rev()
+        .map(|(_, u)| u)
         .collect_vec();
 
     let dist = floyd_warshall(topology);

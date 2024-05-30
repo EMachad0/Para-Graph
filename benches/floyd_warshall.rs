@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use para_graph::algorithms::floyd_warshall::{
-    floyd_warshall_cpu_par, floyd_warshall_gpu_par, floyd_warshall_serial,
+    floyd_warshall_par_cpu, floyd_warshall_par_gpu, floyd_warshall_serial,
 };
 
 const N: usize = 1000;
@@ -21,10 +21,10 @@ fn bench_floyd_warshall(c: &mut Criterion) {
         b.iter(|| floyd_warshall_serial(N, &full_matrix(N)))
     });
     group.bench_function("floyd warshall cpu par", |b| {
-        b.iter(|| floyd_warshall_cpu_par(N, &full_matrix(N)))
+        b.iter(|| floyd_warshall_par_cpu(N, &full_matrix(N)))
     });
     group.bench_function("floyd warshall gpu par", |b| {
-        b.iter(|| floyd_warshall_gpu_par(N, &full_matrix(N)))
+        b.iter(|| floyd_warshall_par_gpu(N, &full_matrix(N)))
     });
     group.finish();
 }

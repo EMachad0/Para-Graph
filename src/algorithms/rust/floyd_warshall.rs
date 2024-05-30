@@ -12,7 +12,7 @@ pub fn floyd_warshall(graph: &UnGraph<Device, Transmission>) -> Vec<Vec<f64>> {
     let n = graph.node_count();
     let graph = graph.map(|_, n| n, |_, e| 1. / (e.transmission_rate * 1_000_000_000.));
     let mat = adj_matrix::get_adj_matrix(&graph);
-    floyd_warshall_gpu_par(n, &mat)
+    floyd_warshall_par_gpu(n, &mat)
 }
 
 pub fn floyd_warshall_serial(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
@@ -27,7 +27,7 @@ pub fn floyd_warshall_serial(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
     mat
 }
 
-pub fn floyd_warshall_cpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
+pub fn floyd_warshall_par_cpu(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
     let mut dist = mat.iter().flatten().cloned().collect_vec();
     for k in 0..n {
         dist.par_iter_mut().enumerate().for_each(|(idx, d)| {
@@ -40,7 +40,7 @@ pub fn floyd_warshall_cpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
     dist.chunks_exact(n).map(|v| v.to_vec()).collect_vec()
 }
 
-pub fn floyd_warshall_gpu_par(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
+pub fn floyd_warshall_par_gpu(n: usize, mat: &[Vec<f64>]) -> Vec<Vec<f64>> {
     let mut mat = mat.iter().flatten().cloned().collect_vec();
     unsafe {
         ffi::floyd_warshall(n, &mut mat);
@@ -70,13 +70,13 @@ mod tests {
 
     #[test]
     fn test_floyd_warshall_cpu_par() {
-        let res = floyd_warshall_cpu_par(3, &test_matrix());
+        let res = floyd_warshall_par_cpu(3, &test_matrix());
         assert_eq!(res, expected_matrix());
     }
 
     #[test]
     fn test_floyd_warshall_gpu_par() {
-        let res = floyd_warshall_gpu_par(3, &test_matrix());
+        let res = floyd_warshall_par_gpu(3, &test_matrix());
         assert_eq!(res, expected_matrix());
     }
 }
