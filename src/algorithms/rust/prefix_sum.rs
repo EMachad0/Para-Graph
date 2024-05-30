@@ -77,14 +77,14 @@ mod tests {
         pref_sum_par_cpu(&mut arr);
         assert_eq!(arr, expected());
     }
-    
+
     #[test]
     fn test_pref_sum_par_gpu() {
         let mut arr = ARR.into_iter().map(|x| x as f64).collect_vec();
         pref_sum_par_gpu(&mut arr);
         assert_eq!(arr, expected().into_iter().map(|x| x as f64).collect_vec());
     }
-    
+
     #[test]
     fn test_pref_sum_par_gpu_pot2() {
         let mut arr = [1., 2.];

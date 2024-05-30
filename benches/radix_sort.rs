@@ -16,11 +16,16 @@ fn bench_radix_sort(c: &mut Criterion) {
     let mut group = c.benchmark_group("Radix Sort");
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
-    group.bench_function("radix sort serial", |b| {
-        b.iter(|| radix_sort_serial(&mut test_vector()))
+
+    let input = test_vector();
+
+    group.bench_with_input("Serial", &input, |b, vec| {
+        let mut vec = vec.clone();
+        b.iter(|| radix_sort_serial(&mut vec))
     });
-    group.bench_function("radix sort par", |b| {
-        b.iter(|| radix_sort_par_cpu(&mut test_vector()))
+    group.bench_with_input("CPU", &input, |b, vec| {
+        let mut vec = vec.clone();
+        b.iter(|| radix_sort_par_cpu(&mut vec))
     });
     group.finish();
 }

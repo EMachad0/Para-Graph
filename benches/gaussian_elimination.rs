@@ -6,7 +6,7 @@ use para_graph::algorithms::gaussian_elimination::{
 
 const N: usize = 1_000;
 
-fn get_a() -> Vec<Vec<f64>> {
+fn get_mat_a() -> Vec<Vec<f64>> {
     (0..N * N)
         .map(|x| {
             let i = x / N;
@@ -23,7 +23,7 @@ fn get_a() -> Vec<Vec<f64>> {
         .collect()
 }
 
-fn get_b() -> Vec<f64> {
+fn get_mat_b() -> Vec<f64> {
     (0..N).map(|x| x as f64).collect()
 }
 
@@ -31,15 +31,19 @@ fn bench_gaussian_elimination(c: &mut Criterion) {
     let mut group = c.benchmark_group("Gaussian Elimination");
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
-    group.bench_function("gaussian elimination serial", |b| {
-        b.iter(|| gaussian_elimination_serial(&get_a(), &get_b()))
+
+    let input = (get_mat_a(), get_mat_b());
+
+    group.bench_with_input("Serial", &input, |b, (mat_a, mat_b)| {
+        b.iter(|| gaussian_elimination_serial(&mat_a, &mat_b))
     });
-    group.bench_function("gaussian elimination par cpu", |b| {
-        b.iter(|| gaussian_elimination_par_cpu(&get_a(), &get_b()))
+    group.bench_with_input("CPU", &input, |b, (mat_a, mat_b)| {
+        b.iter(|| gaussian_elimination_par_cpu(&mat_a, &mat_b))
     });
-    group.bench_function("gaussian elimination par gpu", |b| {
-        b.iter(|| gaussian_elimination_par_gpu(&get_a(), &get_b()))
+    group.bench_with_input("GPU", &input, |b, (mat_a, mat_b)| {
+        b.iter(|| gaussian_elimination_par_gpu(&mat_a, &mat_b))
     });
+
     group.finish();
 }
 

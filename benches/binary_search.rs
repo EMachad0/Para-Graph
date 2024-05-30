@@ -17,11 +17,14 @@ fn bench_binary_search(c: &mut Criterion) {
     let mut group = c.benchmark_group("Binary Search");
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
-    group.bench_function("binary search serial", |b| {
-        b.iter(|| binary_search_serial(eval, 1..MAX, &queries))
+
+    let input = (eval, 1..MAX, queries);
+
+    group.bench_with_input("Serial", &input, |b, (eval, range, queries)| {
+        b.iter(|| binary_search_serial(eval, range.clone(), queries))
     });
-    group.bench_function("binary search par", |b| {
-        b.iter(|| binary_search_par_cpu(eval, 1..MAX, &queries))
+    group.bench_with_input("CPU", &input, |b, (eval, range, queries)| {
+        b.iter(|| binary_search_par_cpu(eval, range.clone(), queries))
     });
     group.finish();
 }

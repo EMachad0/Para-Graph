@@ -17,14 +17,16 @@ fn bench_floyd_warshall(c: &mut Criterion) {
     let mut group = c.benchmark_group("Floyd Warshall");
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
-    group.bench_function("floyd warshall serial", |b| {
-        b.iter(|| floyd_warshall_serial(N, &full_matrix(N)))
+
+    let matrix = full_matrix(N);
+    group.bench_with_input("Serial", &matrix, |b, inp| {
+        b.iter(|| floyd_warshall_serial(inp.len(), &inp))
     });
-    group.bench_function("floyd warshall cpu par", |b| {
-        b.iter(|| floyd_warshall_par_cpu(N, &full_matrix(N)))
+    group.bench_with_input("CPU", &matrix, |b, inp| {
+        b.iter(|| floyd_warshall_par_cpu(inp.len(), &inp))
     });
-    group.bench_function("floyd warshall gpu par", |b| {
-        b.iter(|| floyd_warshall_par_gpu(N, &full_matrix(N)))
+    group.bench_with_input("GPU", &matrix, |b, inp| {
+        b.iter(|| floyd_warshall_par_gpu(inp.len(), &inp))
     });
     group.finish();
 }
