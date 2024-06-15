@@ -9,6 +9,7 @@ fn get_arr() -> Vec<f64> {
 
 fn bench_prefix_sum(c: &mut Criterion) {
     let mut group = c.benchmark_group("Prefix Sum");
+    group.sampling_mode(criterion::SamplingMode::Flat);
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
 

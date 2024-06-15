@@ -15,6 +15,7 @@ fn bench_binary_search(c: &mut Criterion) {
     let eval = |mid: &u32, query: &BigUint| factorial(*mid).cmp(&query.pow(*mid));
 
     let mut group = c.benchmark_group("Binary Search");
+    group.sampling_mode(criterion::SamplingMode::Flat);
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
 

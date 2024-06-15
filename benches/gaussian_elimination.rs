@@ -29,6 +29,7 @@ fn get_mat_b() -> Vec<f64> {
 
 fn bench_gaussian_elimination(c: &mut Criterion) {
     let mut group = c.benchmark_group("Gaussian Elimination");
+    group.sampling_mode(criterion::SamplingMode::Flat);
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
 

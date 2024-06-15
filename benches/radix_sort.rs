@@ -14,6 +14,7 @@ fn test_vector() -> Vec<usize> {
 
 fn bench_radix_sort(c: &mut Criterion) {
     let mut group = c.benchmark_group("Radix Sort");
+    group.sampling_mode(criterion::SamplingMode::Flat);
     group.sample_size(10);
     group.measurement_time(std::time::Duration::from_secs(60));
 
