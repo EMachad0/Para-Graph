@@ -29,7 +29,7 @@ impl std::fmt::Display for Task {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Dependency {
     /// Number of bits
     pub data_size: u64,
